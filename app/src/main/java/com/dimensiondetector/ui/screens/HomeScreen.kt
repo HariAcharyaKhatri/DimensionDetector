@@ -1,7 +1,5 @@
 package com.dimensiondetector.ui.screens
 
-import android.Manifest
-import android.content.pm.PackageManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,20 +19,19 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.RotateRight
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.PhoneAndroid
-import androidx.compose.material.icons.filled.RadioButtonUnchecked
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.Sensors
+import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SquareFoot
 import androidx.compose.material.icons.filled.ViewInAr
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -46,45 +43,40 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import com.dimensiondetector.ar.ArCoreAvailabilityManager
 import com.dimensiondetector.ar.ArCoreStatus
-import com.dimensiondetector.core.DeviceDiagnostics
 import com.dimensiondetector.ui.components.BadgeType
-import com.dimensiondetector.ui.components.InfoCard
-import com.dimensiondetector.ui.components.InfoRow
 import com.dimensiondetector.ui.components.StatusBadge
-import com.dimensiondetector.ui.theme.Amber400
 import com.dimensiondetector.ui.theme.Cyan400
 import com.dimensiondetector.ui.theme.Cyan500
 import com.dimensiondetector.ui.theme.Emerald400
-import com.dimensiondetector.ui.theme.Rose400
+import com.dimensiondetector.ui.theme.Emerald500
+import com.dimensiondetector.ui.theme.Indigo400
+import com.dimensiondetector.ui.theme.Indigo500
 import com.dimensiondetector.ui.theme.Slate200
 import com.dimensiondetector.ui.theme.Slate400
 import com.dimensiondetector.ui.theme.Slate600
 import com.dimensiondetector.ui.theme.Slate700
 import com.dimensiondetector.ui.theme.Slate800
 import com.dimensiondetector.ui.theme.Slate900
+import com.dimensiondetector.ui.theme.Violet400
+import com.dimensiondetector.ui.theme.Violet500
 import com.dimensiondetector.ui.theme.White
 
 @Composable
 fun HomeScreen(
-    onNavigateToScan: () -> Unit,
-    onNavigateToDiagnostics: () -> Unit,
+    onNavigateToScan: (mode: String) -> Unit,
+    onNavigateToSettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val arManager = remember { ArCoreAvailabilityManager(context) }
     val arStatus by arManager.status.collectAsState()
-
-    val deviceInfo = remember { DeviceDiagnostics.collectDeviceInfo(context) }
-    val hasCameraPermission = remember {
-        ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
-    }
 
     LaunchedEffect(Unit) {
         arManager.checkAvailability()
@@ -97,252 +89,285 @@ fun HomeScreen(
             .fillMaxSize()
             .background(Slate900)
             .verticalScroll(scrollState)
-            .padding(20.dp)
+            .padding(horizontal = 20.dp, vertical = 16.dp)
     ) {
-        // App Header
+        // App Header Bar
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
-                Text(
-                    text = "DIMENSION DETECTOR",
-                    color = Cyan400,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 2.sp
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "DimensionDetector",
+                        color = White,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = (-0.5).sp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Cyan400.copy(alpha = 0.15f))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "AI 3D",
+                            color = Cyan400,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "3D Scanner & Depth",
-                    color = White,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.ExtraBold
+                    text = "Spatial AI Measurement Studio",
+                    color = Slate400,
+                    fontSize = 12.sp
                 )
             }
-            StatusBadge(
-                text = "Prototype 1.0",
-                type = BadgeType.INFO
-            )
+
+            IconButton(
+                onClick = onNavigateToSettings,
+                modifier = Modifier
+                    .size(42.dp)
+                    .background(Slate800, CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Settings",
+                    tint = Slate200
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Device Banner
-        Box(
+        // System Readiness Status Pill
+        val (statusText, badgeType) = when (arStatus) {
+            is ArCoreStatus.SupportedInstalled -> Pair("Spatial Tracking Ready", BadgeType.SUCCESS)
+            is ArCoreStatus.SupportedNotInstalled -> Pair("AR Services Install Required", BadgeType.WARNING)
+            is ArCoreStatus.SupportedApkTooOld -> Pair("AR Services Update Needed", BadgeType.WARNING)
+            is ArCoreStatus.Unsupported -> Pair("Hardware Compatibility Notice", BadgeType.WARNING)
+            is ArCoreStatus.Error -> Pair("Sensor Check Error", BadgeType.ERROR)
+            is ArCoreStatus.Checking -> Pair("Calibrating Sensors...", BadgeType.INFO)
+        }
+
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(
-                    Brush.horizontalGradient(
-                        listOf(Slate800, Slate700)
-                    )
-                )
-                .border(1.dp, Slate600, RoundedCornerShape(16.dp))
-                .padding(16.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(Slate800.copy(alpha = 0.6f))
+                .border(1.dp, Slate700, RoundedCornerShape(12.dp))
+                .padding(horizontal = 14.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
+                        .size(8.dp)
                         .clip(CircleShape)
-                        .background(Cyan400.copy(alpha = 0.15f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.PhoneAndroid,
-                        contentDescription = null,
-                        tint = Cyan400,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(14.dp))
-                Column {
-                    Text(
-                        text = "${deviceInfo.manufacturer.uppercase()} ${deviceInfo.model}",
-                        color = White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "Android ${deviceInfo.androidVersion} (API ${deviceInfo.apiLevel}) • Board: ${deviceInfo.board}",
-                        color = Slate400,
-                        fontSize = 12.sp
-                    )
-                }
+                        .background(if (badgeType == BadgeType.SUCCESS) Emerald400 else Cyan400)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "AR ENGINE STATUS",
+                    color = Slate400,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
             }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Readiness Matrix
-        InfoCard(
-            title = "Hardware & AR Readiness",
-            icon = Icons.Default.Sensors,
-            badge = {
-                val badgeType = when (arStatus) {
-                    is ArCoreStatus.SupportedInstalled -> BadgeType.SUCCESS
-                    is ArCoreStatus.SupportedNotInstalled, is ArCoreStatus.SupportedApkTooOld -> BadgeType.WARNING
-                    is ArCoreStatus.Unsupported, is ArCoreStatus.Error -> BadgeType.ERROR
-                    is ArCoreStatus.Checking -> BadgeType.INFO
-                }
-                val badgeText = when (arStatus) {
-                    is ArCoreStatus.SupportedInstalled -> "AR Ready"
-                    is ArCoreStatus.SupportedNotInstalled -> "Install AR Services"
-                    is ArCoreStatus.SupportedApkTooOld -> "Update AR Services"
-                    is ArCoreStatus.Unsupported -> "Uncertified Hardware"
-                    is ArCoreStatus.Error -> "Check Error"
-                    is ArCoreStatus.Checking -> "Checking..."
-                }
-                StatusBadge(text = badgeText, type = badgeType)
-            }
-        ) {
-            InfoRow(
-                label = "Camera Hardware Level",
-                value = deviceInfo.cameraInfo.hardwareLevel,
-                valueColor = if (deviceInfo.cameraInfo.hasBackCamera) Emerald400 else Rose400
-            )
-            InfoRow(
-                label = "Camera Permission",
-                value = if (hasCameraPermission) "Granted" else "Pending Prompt",
-                valueColor = if (hasCameraPermission) Emerald400 else Amber400
-            )
-            InfoRow(
-                label = "ARCore Certification",
-                value = when (arStatus) {
-                    is ArCoreStatus.SupportedInstalled -> "Certified & Installed"
-                    is ArCoreStatus.SupportedNotInstalled -> "Supported (Requires Install)"
-                    is ArCoreStatus.SupportedApkTooOld -> "Supported (Update Needed)"
-                    is ArCoreStatus.Unsupported -> "Uncertified / Incompatible"
-                    is ArCoreStatus.Error -> "Query Failed"
-                    is ArCoreStatus.Checking -> "Querying Google..."
-                },
-                valueColor = when (arStatus) {
-                    is ArCoreStatus.SupportedInstalled -> Emerald400
-                    is ArCoreStatus.SupportedNotInstalled, is ArCoreStatus.SupportedApkTooOld -> Amber400
-                    is ArCoreStatus.Unsupported, is ArCoreStatus.Error -> Rose400
-                    is ArCoreStatus.Checking -> Cyan400
-                }
-            )
-            InfoRow(
-                label = "Depth Sensor / API",
-                value = if (deviceInfo.cameraInfo.isDepthCapable) "Hardware Depth Output" else "Software / AR Mode Dependent",
-                valueColor = Slate200
-            )
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // Action Buttons
-        Button(
-            onClick = onNavigateToScan,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(54.dp),
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Cyan500,
-                contentColor = Slate900
-            )
-        ) {
-            Icon(
-                imageVector = Icons.Default.ViewInAr,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Launch AR Scanner & Preview",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        OutlinedButton(
-            onClick = onNavigateToDiagnostics,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = Cyan400
-            ),
-            border = ButtonDefaults.outlinedButtonBorder.copy(
-                brush = Brush.horizontalGradient(listOf(Slate600, Slate700))
-            )
-        ) {
-            Icon(
-                imageVector = Icons.Default.Security,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Device & Sensor Diagnostics",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold
-            )
+            StatusBadge(text = statusText, type = badgeType)
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Prototype Roadmap & Validation Principles
-        InfoCard(
-            title = "Development Roadmap",
-            icon = Icons.Default.Info
-        ) {
-            RoadmapItem(
-                title = "Stage 1 — Camera & Depth Diagnostics",
-                status = "COMPLETED",
-                isDone = true
-            )
-            RoadmapItem(
-                title = "Stage 2 — Object Selection & Depth Sampling",
-                status = "PENDING",
-                isDone = false
-            )
-            RoadmapItem(
-                title = "Stage 3 — Multi-View Point Cloud & Dimensions",
-                status = "PENDING",
-                isDone = false
-            )
-            RoadmapItem(
-                title = "Stage 4 — Guided Scan & Reference Validation",
-                status = "PENDING",
-                isDone = false
-            )
-        }
+        // Section Title: Modes
+        Text(
+            text = "MEASUREMENT MODES",
+            color = Slate400,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.sp,
+            modifier = Modifier.padding(start = 4.dp, bottom = 12.dp)
+        )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        // Mode Card 1: Object Dimensions (L x W x H)
+        MeasurementModeCard(
+            title = "Object Dimensions",
+            badge = "Instant L × W × H",
+            description = "Point at any box, package, or furniture on a table or floor for real-time dimensional bounding.",
+            icon = Icons.Default.ViewInAr,
+            gradientColors = listOf(Color(0xFF0F766E), Color(0xFF0D9488)),
+            accentColor = Cyan400,
+            onClick = { onNavigateToScan("object") }
+        )
 
-        // Quality & Device Disclaimer
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // Mode Card 2: Guided 3D Spatial Scan
+        MeasurementModeCard(
+            title = "Guided 3D Scan",
+            badge = "Multi-Angle Point Cloud",
+            description = "Orbit 360° around an object to accumulate spatial point clouds and compute oriented bounding cages.",
+            icon = Icons.AutoMirrored.Filled.RotateRight,
+            gradientColors = listOf(Color(0xFF4C1D95), Color(0xFF6D28D9)),
+            accentColor = Violet400,
+            onClick = { onNavigateToScan("scan3d") }
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // Mode Card 3: Room & Space Tool
+        MeasurementModeCard(
+            title = "Room & Space Tool",
+            badge = "Distance & Area",
+            description = "Measure wall lengths, floor areas, door clearances, and ceiling heights with point-to-point snapping.",
+            icon = Icons.Default.SquareFoot,
+            gradientColors = listOf(Color(0xFF064E3B), Color(0xFF047857)),
+            accentColor = Emerald400,
+            onClick = { onNavigateToScan("room") }
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Section: Best Practice Tips
+        Text(
+            text = "SCANNING ACCURACY TIPS",
+            color = Slate400,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.sp,
+            modifier = Modifier.padding(start = 4.dp, bottom = 12.dp)
+        )
+
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(containerColor = Slate800.copy(alpha = 0.6f))
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Slate800),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Slate700)
         ) {
-            Row(
-                modifier = Modifier.padding(14.dp),
-                verticalAlignment = Alignment.Top
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = null,
-                    tint = Amber400,
-                    modifier = Modifier
-                        .size(18.dp)
-                        .padding(top = 2.dp)
+            Column(modifier = Modifier.padding(16.dp)) {
+                AccuracyTipRow(
+                    number = "1",
+                    title = "Adequate Lighting & Texture",
+                    description = "Objects on textured surfaces (wood, fabric, carpet) stabilize tracking faster than glossy, featureless glass."
                 )
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
+                AccuracyTipRow(
+                    number = "2",
+                    title = "Smooth Orbital Motion",
+                    description = "Move slowly around the target. Rapid jerks or fast pans can degrade optical feature tracking."
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                AccuracyTipRow(
+                    number = "3",
+                    title = "Genuine Physical Scale",
+                    description = "All dimensions are triangulated from tracked camera trajectories and plane anchors without synthetic approximations."
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun MeasurementModeCard(
+    title: String,
+    badge: String,
+    description: String,
+    icon: ImageVector,
+    gradientColors: List<Color>,
+    accentColor: Color,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .clickable { onClick() },
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = Slate800),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Slate700)
+    ) {
+        Column(modifier = Modifier.padding(18.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(46.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(Brush.linearGradient(gradientColors)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Text(
+                        text = title,
+                        color = White,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(accentColor.copy(alpha = 0.15f))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = badge,
+                        color = accentColor,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = description,
+                color = Slate400,
+                fontSize = 13.sp,
+                lineHeight = 18.sp
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    text = "Accuracy Note: Uncertified devices (like POCO X6) report hardware limitations safely without crashing. No fake dimensions or estimated scales are displayed unless verified against active physical depth data.",
-                    color = Slate400,
-                    fontSize = 12.sp,
-                    lineHeight = 17.sp
+                    text = "Launch Mode",
+                    color = accentColor,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null,
+                    tint = accentColor,
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }
@@ -350,34 +375,41 @@ fun HomeScreen(
 }
 
 @Composable
-private fun RoadmapItem(
+private fun AccuracyTipRow(
+    number: String,
     title: String,
-    status: String,
-    isDone: Boolean
+    description: String
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = if (isDone) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-            contentDescription = null,
-            tint = if (isDone) Emerald400 else Slate600,
-            modifier = Modifier.size(16.dp)
-        )
-        Spacer(modifier = Modifier.width(10.dp))
-        Text(
-            text = title,
-            color = if (isDone) Slate200 else Slate400,
-            fontSize = 13.sp,
-            fontWeight = if (isDone) FontWeight.Medium else FontWeight.Normal,
-            modifier = Modifier.weight(1f)
-        )
-        StatusBadge(
-            text = status,
-            type = if (isDone) BadgeType.SUCCESS else BadgeType.NEUTRAL
-        )
+    Row(verticalAlignment = Alignment.Top) {
+        Box(
+            modifier = Modifier
+                .size(22.dp)
+                .clip(CircleShape)
+                .background(Slate700),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = number,
+                color = Cyan400,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column {
+            Text(
+                text = title,
+                color = Slate200,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = description,
+                color = Slate400,
+                fontSize = 12.sp,
+                lineHeight = 16.sp
+            )
+        }
     }
 }

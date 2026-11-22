@@ -93,6 +93,7 @@ import javax.microedition.khronos.opengles.GL10
 fun ArScanScreen(
     onNavigateBack: () -> Unit,
     onNavigateToDiagnostics: () -> Unit,
+    scanMode: String = "object",
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -202,8 +203,15 @@ fun ArScanScreen(
                     sessionManager = sessionManager
                 )
 
+                // Precision Spatial Targeting Reticle
+                SpatialReticle(
+                    isTracking = sessionDiagnostics.trackingState == TrackingState.TRACKING,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+
                 // Floating HUD Overlay
                 ArScanningHud(
+                    mode = scanMode,
                     diagnostics = sessionDiagnostics,
                     onNavigateBack = onNavigateBack
                 )
@@ -290,10 +298,50 @@ private fun ArCameraSurface(
 }
 
 @Composable
+private fun SpatialReticle(
+    isTracking: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val reticleColor = if (isTracking) Cyan400 else Slate400
+    Box(
+        modifier = modifier.size(54.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        // Outer focal circle
+        Box(
+            modifier = Modifier
+                .size(46.dp)
+                .clip(CircleShape)
+                .border(1.5.dp, reticleColor.copy(alpha = 0.6f), CircleShape)
+        )
+        // Center alignment dot
+        Box(
+            modifier = Modifier
+                .size(6.dp)
+                .clip(CircleShape)
+                .background(reticleColor)
+        )
+    }
+}
+
+@Composable
 private fun ArScanningHud(
+    mode: String,
     diagnostics: com.dimensiondetector.ar.ArSessionDiagnostics,
     onNavigateBack: () -> Unit
 ) {
+    val modeTitle = when (mode) {
+        "scan3d" -> "GUIDED 3D"
+        "room" -> "ROOM TOOL"
+        else -> "OBJECT MODE"
+    }
+
+    val guidanceText = when (mode) {
+        "scan3d" -> "Orbit smoothly around the target object to accumulate spatial surface points."
+        "room" -> "Aim crosshair at floor edges and wall corners to snap measurement anchors."
+        else -> "Aim crosshair at an object on a table or floor to lock physical boundary anchors."
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -319,6 +367,23 @@ private fun ArScanningHud(
                 )
             }
 
+            // Mode Badge
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Cyan400.copy(alpha = 0.2f))
+                    .border(1.dp, Cyan400.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                    .padding(horizontal = 10.dp, vertical = 6.dp)
+            ) {
+                Text(
+                    text = modeTitle,
+                    color = Cyan400,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+            }
+
             // Tracking State Badge
             val trackingBadgeType = when (diagnostics.trackingState) {
                 TrackingState.TRACKING -> BadgeType.SUCCESS
@@ -326,7 +391,7 @@ private fun ArScanningHud(
                 TrackingState.STOPPED -> BadgeType.ERROR
             }
             StatusBadge(
-                text = "TRACKING: ${diagnostics.trackingState.name}",
+                text = diagnostics.trackingState.name,
                 type = trackingBadgeType
             )
 
@@ -362,9 +427,9 @@ private fun ArScanningHud(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "SENSOR STATUS",
+                        text = "GUIDED SPATIAL SCAN",
                         color = Slate400,
-                        fontSize = 11.sp,
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp
                     )
@@ -372,12 +437,12 @@ private fun ArScanningHud(
                     val depthBadgeType = when {
                         diagnostics.isDepthActive && diagnostics.isDepthImageAcquired -> BadgeType.SUCCESS
                         diagnostics.isDepthActive -> BadgeType.INFO
-                        else -> BadgeType.WARNING
+                        else -> BadgeType.NEUTRAL
                     }
                     val depthText = when {
                         diagnostics.isDepthActive && diagnostics.isDepthImageAcquired -> "DEPTH: ACTIVE (${diagnostics.depthFrameCount})"
                         diagnostics.isDepthActive -> "DEPTH: ACCUMULATING"
-                        else -> "DEPTH: DISABLED"
+                        else -> "VIO PLANE ANCHORS"
                     }
                     StatusBadge(text = depthText, type = depthBadgeType)
                 }
@@ -385,17 +450,10 @@ private fun ArScanningHud(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = when {
-                        diagnostics.isDepthActive && diagnostics.isDepthImageAcquired ->
-                            "Physical 16-bit depth stream active (${diagnostics.depthStatus}). Multi-view sampling ready."
-                        diagnostics.isDepthActive ->
-                            "Depth API enabled in session (${diagnostics.depthStatus}). Move device to accumulate stereo parallax."
-                        else ->
-                            "Depth API query isDepthModeSupported() = false on current device profile. RGB pose tracking is active."
-                    },
+                    text = guidanceText,
                     color = Slate200,
-                    fontSize = 12.sp,
-                    lineHeight = 17.sp
+                    fontSize = 13.sp,
+                    lineHeight = 18.sp
                 )
             }
         }
